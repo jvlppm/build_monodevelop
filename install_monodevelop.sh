@@ -30,29 +30,35 @@ install(){
 	fi
 	cd $repo || die "failed to enter $repo"
 
-	local baseConf
-	if [[ -a "autogen.sh" ]]; then
-		baseConf="autogen.sh"
-	else
-		baseConf="configure"
-	fi
+	local installed="installed.txt"
+	if [[ ! -a $installed ]]; then
 
-	local configure
-	if [[ $# -eq 1 ]]; then
-		configure=$baseConf
-	else
-		configure=$2
-	fi
+		local baseConf
+		if [[ -a "autogen.sh" ]]; then
+			baseConf="autogen.sh"
+		else
+			baseConf="configure"
+		fi
+
+		local configure
+		if [[ $# -eq 1 ]]; then
+			configure=$baseConf
+		else
+			configure=$2
+		fi
 	
-	./$configure --prefix=$MONO_PREFIX
-	local configured=$?
-	if [[ ! $configured ]]; then
-		cp config.log ../$repo.config.log
-		die "failed to configure $repo"
+		./$configure --prefix=$MONO_PREFIX
+		local configured=$?
+		if [[ ! $configured ]]; then
+			cp config.log ../$repo.config.log
+			die "failed to configure $repo"
+		fi
+
+		make || die "failed to make $repo"
+		make install || die "failed to install $repo"
+		echo $(date) > $installed
 	fi
 
-	make || die "failed to make $repo"
-	make install || die "failed to install $repo"
 	cd - || die "failed to exit $repo"
 }
 
