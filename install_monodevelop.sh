@@ -57,7 +57,7 @@ apt-get install --yes git
 apt-get install --yes automake libtool
 
 # Installing libgdiplus
-apt-get install --yes libglib2.0-dev libpng12-dev libgif-dev libjpeg-dev libtiff5-dev libfontconfig1-dev libcairo2-dev libexif-dev
+apt-get install --yes libglib2.0-dev libpng-dev libgif-dev libjpeg-dev libtiff-dev libfontconfig1-dev libcairo2-dev libexif-dev
 install libgdiplus
 # -----
 
