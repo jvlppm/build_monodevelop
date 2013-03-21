@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPTPATH=`dirname "${BASH_SOURCE[0]}"`
+SCRIPTPATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
 source $SCRIPTPATH/mono-env.sh
 
 # Make sure only root can run our script
@@ -112,5 +112,14 @@ install debugger
 install monodevelop
 # -----
 
+echo "[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=false
+Exec=$SCRIPTPATH/run_monodevelop.sh
+Name=MonoDevelop
+Icon=$SCRIPTPATH/monodevelop/main/theme-icons/Mac/png/128x128/monodevelop.png" > monodevelop.desktop
+chmod +x monodevelop.desktop
 
 # Result: MonoDevelop 4.0, without glade-sharp.dll
