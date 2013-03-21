@@ -1,5 +1,6 @@
 #!/bin/bash
-source mono-env.sh
+SCRIPTPATH=`dirname "${BASH_SOURCE[0]}"`
+source $SCRIPTPATH/mono-env.sh
 
 # Make sure only root can run our script
 if [[ $EUID -ne 0 ]]; then

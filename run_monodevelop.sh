@@ -1,4 +1,5 @@
 #!/bin/bash
-source mono-env.sh
+SCRIPTPATH=`dirname "${BASH_SOURCE[0]}"`
+source $SCRIPTPATH/mono-env.sh
 monodevelop
 
