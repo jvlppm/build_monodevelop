@@ -112,6 +112,10 @@ install debugger
 install monodevelop
 # -----
 
+# Installing webkit-sharp (Optional)
+apt-get install --yes libwebkit-dev
+install webkit-sharp
+
 echo "[Desktop Entry]
 Encoding=UTF-8
 Version=1.0
