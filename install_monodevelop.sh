@@ -16,12 +16,17 @@ function die(){
 install(){
 	local repo=$1
 	if [[ ! -d $repo ]]; then
-		git clone --recursive git://github.com/mono/$repo.git || die "failed to clone $repo"
+		git clone --recursive git://github.com/mono/$repo.git -b $3 || die "failed to clone $repo"
 	fi
 	cd $repo || die "failed to enter $repo"
 
+	git fetch origin
+	git stash -u
+	git checkout $3
+	git reset --hard origin/$3
+
 	local installed="installed.txt"
-	if [[ ! -a $installed ]]; then
+	if ([ -d .git ] && diff installed.txt .git/HEAD >/dev/null) || ([ ! -d .git ] && [[ ! -a $installed ]]); then
 
 		local baseConf
 		if [[ -a "autogen.sh" ]]; then
@@ -46,7 +51,11 @@ install(){
 
 		make || die "failed to make $repo"
 		make install || die "failed to install $repo"
-		echo $(date) > $installed
+		if [ -d .git ]; then
+			cp .git/HEAD $installed
+		else
+			echo $(date) > $installed
+		fi
 	fi
 
 	cd - || die "failed to exit $repo"
@@ -74,8 +83,8 @@ install gtk-sharp
 
 # Installing gtk-sharp-2.12
 apt-get install --yes libgtk2.0-dev libglade2-dev
-git clone --recursive git://github.com/mono/gtk-sharp.git -b gtk-sharp-2-12-branch gtk-sharp-2-12
-install gtk-sharp-2-12 bootstrap-2.12
+git clone --recursive gtk-sharp -b gtk-sharp-2-12-branch gtk-sharp-2-12
+install gtk-sharp-2-12 bootstrap-2.12 gtk-sharp-2-12-branch
 # -----
 
 # Installing gnome-sharp
