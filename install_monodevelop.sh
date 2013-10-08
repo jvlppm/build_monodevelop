@@ -16,14 +16,19 @@ function die(){
 install(){
 	local repo=$1
 	if [[ ! -d $repo ]]; then
+		echo -ne "\e]2;Cloning $repo\a"
 		git clone --recursive git://github.com/mono/$repo.git -b $3 || die "failed to clone $repo"
+		cd $repo || die "failed to enter $repo"
+	else
+		cd $repo || die "failed to enter $repo"
+		if [ -d .git ]; then
+			echo -ne "\e]2;Updating $repo\a"
+			git fetch origin
+			git stash -u
+			git checkout $3
+			git reset --hard origin/$3
+		fi
 	fi
-	cd $repo || die "failed to enter $repo"
-
-	git fetch origin
-	git stash -u
-	git checkout $3
-	git reset --hard origin/$3
 
 	local installed="installed.txt"
 	if ([ -d .git ] && diff installed.txt .git/HEAD >/dev/null) || ([ ! -d .git ] && [[ ! -a $installed ]]); then
@@ -42,6 +47,7 @@ install(){
 			configure=$2
 		fi
 	
+		echo -ne "\e]2;Configuring $repo\a"
 		./$configure --prefix=$MONO_PREFIX
 		local configured=$?
 		if [[ ! $configured ]]; then
@@ -49,7 +55,9 @@ install(){
 			die "failed to configure $repo"
 		fi
 
+		echo -ne "\e]2;Making $repo\a"
 		make || die "failed to make $repo"
+		echo -ne "\e]2;Installing $repo\a"
 		make install || die "failed to install $repo"
 		if [ -d .git ]; then
 			cp .git/HEAD $installed
@@ -134,5 +142,7 @@ Exec=$SCRIPTPATH/run_monodevelop.sh
 Name=MonoDevelop
 Icon=$SCRIPTPATH/monodevelop/main/theme-icons/Mac/png/128x128/monodevelop.png" > monodevelop.desktop
 chmod +x monodevelop.desktop
+
+echo -ne "\e]2;Build completed\a"
 
 # Result: MonoDevelop 4.0, without glade-sharp.dll
