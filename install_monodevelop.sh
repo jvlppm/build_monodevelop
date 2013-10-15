@@ -8,6 +8,8 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+__MONODEVELOP_CLEAN=$1
+
 function die(){
  echo $1
  exit 1
@@ -31,7 +33,18 @@ install(){
 	fi
 
 	local installed="installed.txt"
-	if ([ -d .git ] && diff installed.txt .git/HEAD >/dev/null) || ([ ! -d .git ] && [[ ! -a $installed ]]); then
+
+	if [ "$__MONODEVELOP_CLEAN" == "clean" ]; then
+		echo -ne "\e]2;Cleaning $repo\a"
+		if [ -d .git ]; then
+			git clean -dfx
+		else
+			make clean
+			rm $installed
+		fi
+	fi
+
+	if [ ! -f $installed ] || ([ -d .git ] && diff $installed .git/HEAD >/dev/null); then
 
 		local baseConf
 		if [[ -a "autogen.sh" ]]; then
@@ -132,6 +145,12 @@ install monodevelop
 # Installing webkit-sharp (Optional)
 apt-get install --yes libwebkit-dev
 install webkit-sharp
+
+# Installing uia2atk
+#apt-get install --yes intltool
+#git clone --recursive git://github.com/mono/uia2atk.git || die "failed to clone uia2atk"
+#install uia2atk/UIAutomation
+#install uia2atk/UIAutomationWinforms
 
 echo "[Desktop Entry]
 Encoding=UTF-8
