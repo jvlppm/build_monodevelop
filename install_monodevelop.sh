@@ -17,9 +17,15 @@ function die(){
 
 install(){
 	local repo=$1
+	local branch=$3
+
+	if [ -z "$branch" ]; then
+		branch="master"
+	fi
+
 	if [[ ! -d $repo ]]; then
 		echo -ne "\e]2;Cloning $repo\a"
-		git clone --recursive git://github.com/mono/$repo.git -b $3 || die "failed to clone $repo"
+		git clone --recursive git://github.com/mono/$repo.git -b $branch || die "failed to clone $repo"
 		cd $repo || die "failed to enter $repo"
 	else
 		cd $repo || die "failed to enter $repo"
@@ -27,8 +33,9 @@ install(){
 			echo -ne "\e]2;Updating $repo\a"
 			git fetch origin
 			git stash -u
-			git checkout $3
-			git reset --hard origin/$3
+			git checkout $branch
+			git reset --hard origin/$branch
+			git submodule update
 		fi
 	fi
 
