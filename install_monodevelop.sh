@@ -30,8 +30,13 @@ install(){
 	else
 		cd $repo || die "failed to enter $repo"
 		if [ -d .git ]; then
-			echo -ne "\e]2;Updating $repo\a"
 			git fetch origin
+			if [ "$(git rev-list --count $branch..origin/$branch)" == "0" ]; then
+				cd -
+				return 0
+			fi
+
+			echo -ne "\e]2;Updating $repo\a"
 			git stash -u
 			git checkout $branch
 			git reset --hard origin/$branch
@@ -51,7 +56,7 @@ install(){
 		fi
 	fi
 
-	if [ ! -f $installed ] || ([ -d .git ] && diff $installed .git/HEAD >/dev/null); then
+	if [ ! -f $installed ] || ([ -d .git ] && "$(git rev-parse HEAD)" != "$(cat $installed)"); then
 
 		local baseConf
 		if [[ -a "autogen.sh" ]]; then
@@ -80,7 +85,7 @@ install(){
 		echo -ne "\e]2;Installing $repo\a"
 		make install || die "failed to install $repo"
 		if [ -d .git ]; then
-			cp .git/HEAD $installed
+			git rev-parse HEAD > $installed
 		else
 			echo $(date) > $installed
 		fi
