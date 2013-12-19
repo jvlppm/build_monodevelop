@@ -15,83 +15,100 @@ function die(){
  exit 1
 }
 
+update(){
+    local repo=$1
+    local branch=$3
+
+    if [ -z "$branch" ]; then
+        branch="master"
+    fi
+    
+    if [ ! -d .git ]; then
+        return 0
+    fi
+    git fetch origin
+
+    if [ "$(git rev-list --count $branch..origin/$branch)" == "0" ]; then
+        return 0
+    fi
+
+    echo -ne "\e]2;Updating $repo\a"
+    
+    git stash -u
+    git checkout $branch
+    git reset --hard origin/$branch
+    git submodule update
+}
+
 install(){
-	local repo=$1
-	local branch=$3
+    echo "Installing $1 $3"
+    local repo=$1
+    local branch=$3
 
-	if [ -z "$branch" ]; then
-		branch="master"
-	fi
+    if [ -z "$branch" ]; then
+        branch="master"
+    fi
 
-	if [[ ! -d $repo ]]; then
-		echo -ne "\e]2;Cloning $repo\a"
-		git clone --recursive git://github.com/mono/$repo.git -b $branch || die "failed to clone $repo"
-		cd $repo || die "failed to enter $repo"
-	else
-		cd $repo || die "failed to enter $repo"
-		if [ -d .git ]; then
-			git fetch origin
-			if [ "$(git rev-list --count $branch..origin/$branch)" == "0" ]; then
-				cd -
-				return 0
-			fi
+    if [[ ! -d $repo ]]; then
+        echo -ne "\e]2;Cloning $repo\a"
+        git clone --recursive git://github.com/mono/$repo.git -b $branch || die "failed to clone $repo"
+        cd $repo || die "failed to enter $repo"
+    else
+        cd $repo || die "failed to enter $repo"
+        update $@
+    fi
 
-			echo -ne "\e]2;Updating $repo\a"
-			git stash -u
-			git checkout $branch
-			git reset --hard origin/$branch
-			git submodule update
-		fi
-	fi
+    local installed="installed.txt"
 
-	local installed="installed.txt"
+    if [ "$__MONODEVELOP_CLEAN" == "clean" ]; then
+        echo -ne "\e]2;Cleaning $repo\a"
+        if [ -d .git ]; then
+            git clean -dfx
+        else
+            make clean
+            rm $installed
+        fi
+    fi
 
-	if [ "$__MONODEVELOP_CLEAN" == "clean" ]; then
-		echo -ne "\e]2;Cleaning $repo\a"
-		if [ -d .git ]; then
-			git clean -dfx
-		else
-			make clean
-			rm $installed
-		fi
-	fi
+    local INSTALLED_SH1=$(cat $installed)
+    local CURRENT_SH1=$(git rev-parse HEAD)
 
-	if [ ! -f $installed ] || ([ -d .git ] && "$(git rev-parse HEAD)" != "$(cat $installed)"); then
+    if [ ! -f $installed ] || ([ -d .git ] && [ "$INSTALLED_SH1" != "$CURRENT_SH1" ]); then
 
-		local baseConf
-		if [[ -a "autogen.sh" ]]; then
-			baseConf="autogen.sh"
-		else
-			baseConf="configure"
-		fi
+        local baseConf
+        if [[ -a "autogen.sh" ]]; then
+            baseConf="autogen.sh"
+        else
+            baseConf="configure"
+        fi
 
-		local configure
-		if [[ $# -eq 1 ]]; then
-			configure=$baseConf
-		else
-			configure=$2
-		fi
-	
-		echo -ne "\e]2;Configuring $repo\a"
-		./$configure --prefix=$MONO_PREFIX
-		local configured=$?
-		if [[ ! $configured ]]; then
-			cp config.log ../$repo.config.log
-			die "failed to configure $repo"
-		fi
+        local configure
+        if [[ $# -eq 1 ]]; then
+            configure=$baseConf
+        else
+            configure=$2
+        fi
+    
+        echo -ne "\e]2;Configuring $repo\a"
+        ./$configure --prefix=$MONO_PREFIX
+        local configured=$?
+        if [[ ! $configured ]]; then
+            cp config.log ../$repo.config.log
+            die "failed to configure $repo"
+        fi
 
-		echo -ne "\e]2;Making $repo\a"
-		make || die "failed to make $repo"
-		echo -ne "\e]2;Installing $repo\a"
-		make install || die "failed to install $repo"
-		if [ -d .git ]; then
-			git rev-parse HEAD > $installed
-		else
-			echo $(date) > $installed
-		fi
-	fi
+        echo -ne "\e]2;Making $repo\a"
+        make || die "failed to make $repo"
+        echo -ne "\e]2;Installing $repo\a"
+        make install || die "failed to install $repo"
+        if [ -d .git ]; then
+            git rev-parse HEAD > $installed
+        else
+            echo $(date) > $installed
+        fi
+    fi
 
-	cd - || die "failed to exit $repo"
+    cd - || die "failed to exit $repo"
 }
 
 # Installing common dependencies
