@@ -133,7 +133,9 @@ install gtk-sharp
 
 # Installing gtk-sharp-2.12
 apt-get install --yes libgtk2.0-dev libglade2-dev
-git clone --recursive gtk-sharp -b gtk-sharp-2-12-branch gtk-sharp-2-12
+if [ -d gtk-sharp ] &&  [ ! -d gtk-sharp-2-12 ]; then
+    cp -r gtk-sharp gtk-sharp-2-12
+fi
 install gtk-sharp-2-12 bootstrap-2.12 gtk-sharp-2-12-branch
 # -----
 
@@ -187,10 +189,10 @@ Version=1.0
 Type=Application
 Terminal=false
 Exec=$SCRIPTPATH/run_monodevelop.sh
-Name=MonoDevelop
-Icon=$SCRIPTPATH/monodevelop/main/theme-icons/Mac/png/128x128/monodevelop.png" > monodevelop.desktop
-chmod +x monodevelop.desktop
+Name=MonoDevelop-Master
+Icon=$SCRIPTPATH/monodevelop/main/theme-icons/Mac/png/128x128/monodevelop.png" > /usr/share/applications/monodevelop-master.desktop
+chmod +x /usr/share/applications/monodevelop-master.desktop
 
 echo -ne "\e]2;Build completed\a"
 
-# Result: MonoDevelop 4.0, without glade-sharp.dll
+# Result: mono 3.2.7+ and MonoDevelop 4.2.3+
